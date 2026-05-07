@@ -1,0 +1,23 @@
+# PDF 转 Markdown 配置文件模板
+# 复制此文件为 config.yaml 并填入你的 API 信息
+
+model:
+  type: openai_compatible
+  name: your-model-name  # 例如: qwen3.6-plus, gpt-4o, claude-sonnet-4-5
+  api_key: your-api-key-here  # 填入你的 API Key
+  base_url: https://api.example.com/v1  # 填入 API 地址
+
+# PDF 转图片设置
+pdf:
+  dpi: 150  # 分辨率（150=标准，300=高清）
+
+# 分段处理设置
+chunk_size: 10  # 每次处理多少页
+
+# 质量检查
+quality_check: true
+
+# 输出设置
+output:
+  cleanup_images: true
+  add_page_separator: true
