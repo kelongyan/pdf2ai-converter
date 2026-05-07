@@ -24,7 +24,7 @@ console = Console(force_terminal=True, legacy_windows=False)
 
 
 class PDFConverter:
-    """PDF 转 Markdown 启动器"""
+    """PDF 转换工具启动器（支持 Markdown 和 Word）"""
 
     def __init__(self):
         self.config_manager = ConfigManager()
@@ -34,7 +34,8 @@ class PDFConverter:
         """显示欢迎横幅"""
         banner = """
 [bold cyan]╔══════════════════════════════════════════════════════════╗
-║          🚀 PDF 转 Markdown 工具 v2.0                   ║
+║          🚀 PDF 转换工具 v2.1                           ║
+║          支持 Markdown 和 Word 格式                      ║
 ╚══════════════════════════════════════════════════════════╝[/bold cyan]
         """
         console.print(banner)
@@ -174,19 +175,35 @@ class PDFConverter:
         with open("config.yaml", "w", encoding="utf-8") as f:
             yaml.dump(config, f, allow_unicode=True)
 
-    def process_file(self, pdf_path: str):
-        """处理单个文件"""
+    def process_file(self, pdf_path: str, output_format: str = "markdown"):
+        """处理单个文件
+
+        Args:
+            pdf_path: PDF 文件路径
+            output_format: 输出格式 ("markdown" 或 "word")
+        """
         console.print(f"\n[bold green]🚀 开始处理：{Path(pdf_path).name}[/bold green]\n")
 
         # 更新配置文件
         self.update_config_file()
 
-        # 调用 main.py
+        # 调用对应的处理程序
         venv_python = Path("venv/Scripts/python.exe")
         if not venv_python.exists():
             venv_python = Path("venv/bin/python")  # Linux/Mac
 
-        cmd = [str(venv_python), "main.py", pdf_path]
+        if output_format == "word":
+            # 询问转换模式
+            console.print("\n[bold]选择转换模式：[/bold]")
+            console.print("  [1] 快速模式 - 只保留内容结构（速度快，成本低）")
+            console.print("  [2] 精确模式 - 保留样式格式（速度慢，成本高）\n")
+
+            mode_choice = Prompt.ask("请选择", choices=["1", "2"], default="2")
+            mode = "fast" if mode_choice == "1" else "precise"
+
+            cmd = [str(venv_python), "main_word.py", pdf_path, "", mode]
+        else:
+            cmd = [str(venv_python), "main.py", pdf_path]
 
         try:
             subprocess.run(cmd, check=True)
@@ -194,8 +211,13 @@ class PDFConverter:
         except subprocess.CalledProcessError as e:
             console.print(f"\n[bold red]❌ 处理失败：{e}[/bold red]\n")
 
-    def process_folder(self, folder_path: str):
-        """批量处理文件夹"""
+    def process_folder(self, folder_path: str, output_format: str = "markdown"):
+        """批量处理文件夹
+
+        Args:
+            folder_path: 文件夹路径
+            output_format: 输出格式 ("markdown" 或 "word")
+        """
         pdf_files = list(Path(folder_path).glob("*.pdf"))
 
         if not pdf_files:
@@ -207,7 +229,7 @@ class PDFConverter:
 
         for i, pdf_file in enumerate(pdf_files, 1):
             console.print(f"[cyan]━━━ 处理 {i}/{len(pdf_files)} ━━━[/cyan]")
-            self.process_file(str(pdf_file))
+            self.process_file(str(pdf_file), output_format)
 
         console.print("[bold green]✅ 批量处理完成！[/bold green]\n")
 
@@ -222,16 +244,18 @@ class PDFConverter:
             menu.add_column(style="bold cyan")
             menu.add_column(style="white")
 
-            menu.add_row("[1]", "🎯 快速转换（单个文件）")
-            menu.add_row("[2]", "📁 批量处理（文件夹）")
-            menu.add_row("[3]", "⚙️  配置管理")
-            menu.add_row("[4]", "🔧 编辑当前配置")
+            menu.add_row("[1]", "📝 转换为 Markdown（单个文件）")
+            menu.add_row("[2]", "📄 转换为 Word（单个文件）")
+            menu.add_row("[3]", "📁 批量转换为 Markdown")
+            menu.add_row("[4]", "📁 批量转换为 Word")
+            menu.add_row("[5]", "⚙️  配置管理")
+            menu.add_row("[6]", "🔧 编辑当前配置")
             menu.add_row("[0]", "👋 退出")
 
             console.print(menu)
             console.print("\n[bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]\n")
 
-            choice = Prompt.ask("请选择", choices=["0", "1", "2", "3", "4"])
+            choice = Prompt.ask("请选择", choices=["0", "1", "2", "3", "4", "5", "6"])
 
             if choice == "0":
                 console.print("\n[cyan]👋 再见！[/cyan]\n")
@@ -242,17 +266,31 @@ class PDFConverter:
                     continue
                 pdf_path = self.select_pdf_file()
                 if pdf_path:
-                    self.process_file(pdf_path)
+                    self.process_file(pdf_path, "markdown")
             elif choice == "2":
+                if not self.current_profile:
+                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
+                    continue
+                pdf_path = self.select_pdf_file()
+                if pdf_path:
+                    self.process_file(pdf_path, "word")
+            elif choice == "3":
                 if not self.current_profile:
                     console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
                     continue
                 folder_path = self.select_pdf_folder()
                 if folder_path:
-                    self.process_folder(folder_path)
-            elif choice == "3":
-                self.load_config()
+                    self.process_folder(folder_path, "markdown")
             elif choice == "4":
+                if not self.current_profile:
+                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
+                    continue
+                folder_path = self.select_pdf_folder()
+                if folder_path:
+                    self.process_folder(folder_path, "word")
+            elif choice == "5":
+                self.load_config()
+            elif choice == "6":
                 if self.current_profile:
                     self.edit_current_config()
                 else:

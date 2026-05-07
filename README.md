@@ -1,8 +1,8 @@
 <div align="center">
 
-# 📄✨ PDF 转 Markdown 魔法工具
+# 📄✨ PDF 转换魔法工具
 
-*让 AI 帮你读 PDF，一键变身 Markdown！*
+*让 AI 帮你读 PDF，一键转换为 Markdown 或 Word！*
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -16,13 +16,21 @@
 
 ## 🎯 这是什么？
 
-厌倦了手动复制 PDF 内容？被页眉页脚搞得头大？
+厌倦了手动复制 PDF 内容？被页眉页脚搞得头大？需要保留原样排版的 Word 文档？
 
-这个工具用 **AI 大模型** 智能识别 PDF，自动：
-- 🧹 **去除页眉页脚** - 再也不用手动删除页码和水印
+这个工具用 **AI 大模型** 智能识别 PDF，支持两种输出格式：
+
+### 📝 转换为 Markdown
+- 🧹 **去除页眉页脚** - 自动删除页码和水印
 - 📐 **保留公式表格** - LaTeX 公式、Markdown 表格完美转换
 - 🎨 **格式规范** - 标题层级、列表缩进自动处理
 - ⚡ **批量处理** - 一次转换整个文件夹
+
+### 📄 转换为 Word（新功能！）
+- 🎨 **保留原样排版** - 尽可能还原字体、颜色、对齐方式
+- 📊 **表格样式** - 保留表格格式和边框
+- 🔤 **字体识别** - 识别并应用原文档字体
+- ⚡ **两种模式** - 快速模式（仅内容）/ 精确模式（保留样式）
 
 > 💡 **支持任何 OpenAI 兼容的视觉模型**：GPT-4V、Claude、通义千问、智谱 GLM...
 
@@ -39,12 +47,15 @@
 ### 🎨 交互式界面
 ```
 ╔══════════════════════════════════════════════════════════╗
-║          🚀 PDF 转 Markdown 工具 v2.0                   ║
+║          🚀 PDF 转换工具 v2.1                           ║
+║          支持 Markdown 和 Word 格式                      ║
 ╚══════════════════════════════════════════════════════════╝
 
-  [1] 🎯 快速转换（单个文件）
-  [2] 📁 批量处理（文件夹）
-  [3] ⚙️  配置管理
+  [1] 📝 转换为 Markdown（单个文件）
+  [2] 📄 转换为 Word（单个文件）
+  [3] 📁 批量转换为 Markdown
+  [4] 📁 批量转换为 Word
+  [5] ⚙️  配置管理
 ```
 
 ### 📊 质量保证
@@ -110,14 +121,25 @@ cp config.yaml.example config.yaml
 
 ### 方式 2️⃣：命令行
 
+**转换为 Markdown：**
 ```powershell
 # 单个文件
 python main.py paper.pdf
 
 # 指定输出路径
 python main.py paper.pdf output.md
+```
 
-# 批量处理（在启动器中选择）
+**转换为 Word：**
+```powershell
+# 精确模式（保留样式，推荐）
+python main_word.py paper.pdf
+
+# 快速模式（仅内容，速度快）
+python main_word.py paper.pdf output.docx fast
+
+# 指定输出路径
+python main_word.py paper.pdf output.docx precise
 ```
 
 ---
@@ -193,12 +215,14 @@ pdf2md/
 ├── 🚀 start.ps1                 # 一键启动脚本
 ├── 🎮 launcher.py               # 交互式启动器
 ├── ⚙️ config_manager.py         # 配置管理
-├── 🔧 main.py                   # 主处理程序
+├── 🔧 main.py                   # Markdown 转换程序
+├── 📄 main_word.py              # Word 转换程序（新增）
 ├── 📄 pdf_processor.py          # PDF 转图片
 ├── 🔍 quality_checker.py        # 质量检查
 ├── 📦 models/                   # 模型适配器
 │   ├── base.py                 # 抽象基类
-│   └── openai_compatible.py    # OpenAI 兼容接口
+│   ├── openai_compatible.py    # OpenAI 兼容接口
+│   └── word_generator.py       # Word 生成器（新增）
 ├── 📋 config.yaml.example       # 配置模板
 ├── 📝 requirements.txt          # 依赖列表
 └── 📖 README.md                 # 你正在看的文档
@@ -216,13 +240,31 @@ pdf2md/
 chunk_size: 5  # 每 5 页一段
 ```
 
-### 🔍 质量检查
+### 🔍 质量检查（Markdown 模式）
 
 自动检查：
 - ✅ 内容长度是否合理
 - ✅ 公式符号是否配对
 - ✅ 表格格式是否正确
 - ✅ 是否有乱码或模型错误
+
+### 📄 Word 转换模式
+
+**快速模式（fast）**：
+- 只保留内容结构（标题、段落、表格、列表）
+- 处理速度快，API 成本低
+- 适合：需要快速提取内容，不在意样式
+
+**精确模式（precise）**：
+- 尽可能保留原文档样式（字体、颜色、对齐）
+- 处理时间较长，API 成本较高
+- 适合：需要保持原样排版的正式文档
+
+```yaml
+# 在 config.yaml 中配置默认模式
+word:
+  mode: precise  # 或 fast
+```
 
 ### 📁 批量处理
 
@@ -236,6 +278,24 @@ chunk_size: 5  # 每 5 页一段
 <summary><b>Q: 支持哪些语言的 PDF？</b></summary>
 
 A: 支持所有语言！取决于你选择的视觉大模型能力。
+</details>
+
+<details>
+<summary><b>Q: Word 转换能完美还原样式吗？</b></summary>
+
+A: 精确模式会尽力还原，但受限于：
+- AI 模型的识别能力
+- 特殊字体可能无法完全匹配
+- 复杂布局（如文本环绕图片）可能有偏差
+- 建议：转换后人工微调
+</details>
+
+<details>
+<summary><b>Q: 快速模式和精确模式有什么区别？</b></summary>
+
+A: 
+- **快速模式**：只提取内容结构，不保留样式，速度快（约 $0.01-0.05/页）
+- **精确模式**：分析并保留字体、颜色、对齐等样式，速度慢（约 $0.05-0.15/页）
 </details>
 
 <details>
@@ -278,6 +338,7 @@ MIT License - 随便用，记得点个 ⭐
 ## 🙏 致谢
 
 - [PyMuPDF](https://github.com/pymupdf/PyMuPDF) - PDF 处理
+- [python-docx](https://github.com/python-openxml/python-docx) - Word 文档生成
 - [Rich](https://github.com/Textualize/rich) - 终端美化
 - [OpenAI](https://openai.com/) - API 标准
 
