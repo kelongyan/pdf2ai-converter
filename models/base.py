@@ -18,6 +18,11 @@ class VisionModel(ABC):
         pass
 
     @abstractmethod
+    def process_page_with_prompt(self, image_path: str, prompt: str) -> str:
+        """使用自定义提示词处理单页 PDF 图片"""
+        pass
+
+    @abstractmethod
     def process_batch(self, images: List[str]) -> str:
         """批量处理多页，保持上下文连贯
 

@@ -12,7 +12,11 @@ from rich.prompt import Prompt, Confirm
 from rich.table import Table
 from rich import box
 from config_manager import ConfigManager
+from config_defaults import build_config_for_profile
 import subprocess
+
+MARKDOWN_SUFFIX = ".md"
+WORD_SUFFIX = ".docx"
 
 # 设置 Windows 控制台 UTF-8 编码
 if sys.platform == "win32":
@@ -34,7 +38,7 @@ class PDFConverter:
         """显示欢迎横幅"""
         banner = """
 [bold cyan]╔══════════════════════════════════════════════════════════╗
-║          🚀 PDF 转换工具 v2.1                           ║
+║          🚀 PDF 转换工具 v3.0.0                         ║
 ║          支持 Markdown 和 Word 格式                      ║
 ╚══════════════════════════════════════════════════════════╝[/bold cyan]
         """
@@ -70,7 +74,6 @@ class PDFConverter:
         dpi = int(Prompt.ask("分辨率 DPI", default="150"))
         chunk_size = int(Prompt.ask("分段大小（每次处理页数）", default="10"))
 
-        # 保存配置
         self.config_manager.save_profile(
             name=name,
             api_url=api_url,
@@ -100,7 +103,7 @@ class PDFConverter:
             profile = self.config_manager.get_profile(name)
             console.print(f"  [{i}] {name} - {profile['model']}")
 
-        console.print(f"  [0] 创建新配置\n")
+        console.print("  [0] 创建新配置\n")
 
         choice = Prompt.ask("选择配置", choices=[str(i) for i in range(len(profiles) + 1)])
 
@@ -116,7 +119,6 @@ class PDFConverter:
         """选择 PDF 文件"""
         console.print("\n[cyan]📁 正在打开文件选择器...[/cyan]")
 
-        # 隐藏 tkinter 主窗口
         root = Tk()
         root.withdraw()
         root.attributes("-topmost", True)
@@ -159,79 +161,135 @@ class PDFConverter:
         """更新 config.yaml"""
         import yaml
 
-        config = {
-            "model": {
-                "type": "openai_compatible",
-                "name": self.current_profile["model"],
-                "api_key": self.current_profile["api_key"],
-                "base_url": self.current_profile["api_url"],
-            },
-            "pdf": {"dpi": self.current_profile.get("dpi", 150)},
-            "chunk_size": self.current_profile.get("chunk_size", 10),
-            "quality_check": True,
-            "output": {"cleanup_images": True, "add_page_separator": True},
-        }
+        config = build_config_for_profile(self.current_profile)
 
         with open("config.yaml", "w", encoding="utf-8") as f:
             yaml.dump(config, f, allow_unicode=True)
 
-    def process_file(self, pdf_path: str, output_format: str = "markdown"):
+    def get_output_path(self, pdf_path: str, output_format: str) -> str:
+        suffix = WORD_SUFFIX if output_format == "word" else MARKDOWN_SUFFIX
+        return str(Path(pdf_path).with_suffix(suffix))
+
+    def run_conversion_command(self, cmd, pdf_path: str, output_path: str, mode: str = None) -> dict:
+        try:
+            subprocess.run(cmd, check=True)
+            console.print("\n[bold green]✅ 处理完成！[/bold green]\n")
+            return {
+                "status": "success",
+                "pdf_path": pdf_path,
+                "output_path": output_path,
+                "mode": mode,
+            }
+        except subprocess.CalledProcessError as e:
+            console.print(f"\n[bold red]❌ 处理失败：{e}[/bold red]\n")
+            return {
+                "status": "failed",
+                "pdf_path": pdf_path,
+                "output_path": output_path,
+                "mode": mode,
+                "error": str(e),
+            }
+
+    def should_skip_output(self, pdf_path: str, output_format: str) -> bool:
+        return Path(self.get_output_path(pdf_path, output_format)).exists()
+
+    def process_file(self, pdf_path: str, output_format: str = "markdown", resume: bool = False):
         """处理单个文件
 
         Args:
             pdf_path: PDF 文件路径
             output_format: 输出格式 ("markdown" 或 "word")
+            resume: 是否仅补处理失败页和未完成页
         """
-        console.print(f"\n[bold green]🚀 开始处理：{Path(pdf_path).name}[/bold green]\n")
+        action = "恢复未完成页面" if resume else "开始处理"
+        console.print(f"\n[bold green]🚀 {action}：{Path(pdf_path).name}[/bold green]\n")
 
-        # 更新配置文件
+        if resume:
+            console.print("[cyan]本次会重新进入转换流程，但只补处理失败页和未完成页；成功缓存页会自动跳过。[/cyan]\n")
+
         self.update_config_file()
-
-        # 调用对应的处理程序
         venv_python = Path("venv/Scripts/python.exe")
         if not venv_python.exists():
-            venv_python = Path("venv/bin/python")  # Linux/Mac
+            venv_python = Path("venv/bin/python")
 
+        output_path = self.get_output_path(pdf_path, output_format)
+        mode = None
         if output_format == "word":
-            # 询问转换模式
             console.print("\n[bold]选择转换模式：[/bold]")
             console.print("  [1] 快速模式 - 只保留内容结构（速度快，成本低）")
             console.print("  [2] 精确模式 - 保留样式格式（速度慢，成本高）\n")
 
             mode_choice = Prompt.ask("请选择", choices=["1", "2"], default="2")
             mode = "fast" if mode_choice == "1" else "precise"
-
-            cmd = [str(venv_python), "main_word.py", pdf_path, "", mode]
+            cmd = [str(venv_python), "main_word.py", pdf_path, output_path, mode]
         else:
-            cmd = [str(venv_python), "main.py", pdf_path]
+            cmd = [str(venv_python), "main.py", pdf_path, output_path]
 
-        try:
-            subprocess.run(cmd, check=True)
-            console.print("\n[bold green]✅ 处理完成！[/bold green]\n")
-        except subprocess.CalledProcessError as e:
-            console.print(f"\n[bold red]❌ 处理失败：{e}[/bold red]\n")
+        if resume:
+            cmd.append("--resume")
 
-    def process_folder(self, folder_path: str, output_format: str = "markdown"):
+        return self.run_conversion_command(cmd, pdf_path, output_path, mode)
+
+    def process_folder(self, folder_path: str, output_format: str = "markdown", resume: bool = False):
         """批量处理文件夹
 
         Args:
             folder_path: 文件夹路径
             output_format: 输出格式 ("markdown" 或 "word")
+            resume: 是否仅补处理失败页和未完成页
         """
         pdf_files = list(Path(folder_path).glob("*.pdf"))
 
         if not pdf_files:
             console.print("[yellow]⚠️  文件夹中没有 PDF 文件[/yellow]\n")
-            return
+            return []
 
-        console.print(f"\n[bold cyan]📦 批量处理模式[/bold cyan]")
-        console.print(f"找到 {len(pdf_files)} 个文件\n")
+        title = "📦 批量恢复模式" if resume else "📦 批量处理模式"
+        console.print(f"\n[bold cyan]{title}[/bold cyan]")
+        console.print(f"找到 {len(pdf_files)} 个文件")
+        if resume:
+            console.print("[cyan]说明：会重新进入每个 PDF 的转换流程，只补处理失败页和未完成页，不会因为已有输出文件而整份跳过。[/cyan]\n")
+        else:
+            console.print()
 
+        results = []
         for i, pdf_file in enumerate(pdf_files, 1):
+            pdf_path = str(pdf_file)
             console.print(f"[cyan]━━━ 处理 {i}/{len(pdf_files)} ━━━[/cyan]")
-            self.process_file(str(pdf_file), output_format)
 
-        console.print("[bold green]✅ 批量处理完成！[/bold green]\n")
+            if not resume and self.should_skip_output(pdf_path, output_format):
+                output_path = self.get_output_path(pdf_path, output_format)
+                console.print(f"[yellow]⏭️  跳过已完成文件：{Path(output_path).name}[/yellow]\n")
+                results.append(
+                    {
+                        "status": "skipped",
+                        "pdf_path": pdf_path,
+                        "output_path": output_path,
+                    }
+                )
+                continue
+
+            results.append(self.process_file(pdf_path, output_format, resume=resume))
+
+        self.print_batch_summary(results)
+        return results
+
+    def print_batch_summary(self, results: list):
+        total = len(results)
+        success_count = sum(1 for item in results if item["status"] == "success")
+        skipped_count = sum(1 for item in results if item["status"] == "skipped")
+        failed = [item for item in results if item["status"] == "failed"]
+
+        console.print("[bold green]✅ 批量处理完成！[/bold green]")
+        console.print(
+            f"[cyan]汇总：总数={total}，成功={success_count}，跳过={skipped_count}，失败={len(failed)}[/cyan]\n"
+        )
+
+        if failed:
+            console.print("[bold red]失败文件：[/bold red]")
+            for item in failed:
+                console.print(f"  - {Path(item['pdf_path']).name}: {item['error']}")
+            console.print()
 
     def show_menu(self):
         """显示主菜单"""
@@ -248,14 +306,18 @@ class PDFConverter:
             menu.add_row("[2]", "📄 转换为 Word（单个文件）")
             menu.add_row("[3]", "📁 批量转换为 Markdown")
             menu.add_row("[4]", "📁 批量转换为 Word")
-            menu.add_row("[5]", "⚙️  配置管理")
-            menu.add_row("[6]", "🔧 编辑当前配置")
+            menu.add_row("[5]", "🔁 恢复 Markdown（单个文件）")
+            menu.add_row("[6]", "🔁 恢复 Word（单个文件）")
+            menu.add_row("[7]", "🔁 批量恢复 Markdown")
+            menu.add_row("[8]", "🔁 批量恢复 Word")
+            menu.add_row("[9]", "⚙️  配置管理")
+            menu.add_row("[10]", "🔧 编辑当前配置")
             menu.add_row("[0]", "👋 退出")
 
             console.print(menu)
             console.print("\n[bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]\n")
 
-            choice = Prompt.ask("请选择", choices=["0", "1", "2", "3", "4", "5", "6"])
+            choice = Prompt.ask("请选择", choices=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])
 
             if choice == "0":
                 console.print("\n[cyan]👋 再见！[/cyan]\n")
@@ -289,8 +351,36 @@ class PDFConverter:
                 if folder_path:
                     self.process_folder(folder_path, "word")
             elif choice == "5":
-                self.load_config()
+                if not self.current_profile:
+                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
+                    continue
+                pdf_path = self.select_pdf_file()
+                if pdf_path:
+                    self.process_file(pdf_path, "markdown", resume=True)
             elif choice == "6":
+                if not self.current_profile:
+                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
+                    continue
+                pdf_path = self.select_pdf_file()
+                if pdf_path:
+                    self.process_file(pdf_path, "word", resume=True)
+            elif choice == "7":
+                if not self.current_profile:
+                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
+                    continue
+                folder_path = self.select_pdf_folder()
+                if folder_path:
+                    self.process_folder(folder_path, "markdown", resume=True)
+            elif choice == "8":
+                if not self.current_profile:
+                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
+                    continue
+                folder_path = self.select_pdf_folder()
+                if folder_path:
+                    self.process_folder(folder_path, "word", resume=True)
+            elif choice == "9":
+                self.load_config()
+            elif choice == "10":
                 if self.current_profile:
                     self.edit_current_config()
                 else:
@@ -314,7 +404,6 @@ class PDFConverter:
             Prompt.ask("分段大小", default=str(self.current_profile.get("chunk_size", 10)))
         )
 
-        # 保存配置
         self.config_manager.save_profile(
             name=name,
             api_url=api_url,
@@ -333,7 +422,6 @@ class PDFConverter:
         """运行启动器"""
         self.show_banner()
 
-        # 尝试加载上次使用的配置
         last_profile = self.config_manager.get_last_profile()
         if last_profile:
             profiles = self.config_manager.list_profiles()
@@ -345,7 +433,6 @@ class PDFConverter:
             console.print("[yellow]⚠️  首次使用，请创建配置[/yellow]\n")
             self.create_new_config()
 
-        # 显示主菜单
         self.show_menu()
 
 

@@ -87,7 +87,7 @@ class WordGenerator:
 直接输出 JSON："""
 
         try:
-            response = self.vision_model.process_page(image_path, prompt)
+            response = self.vision_model.process_page_with_prompt(image_path, prompt)
             # 清理可能的 markdown 代码块标记
             response = response.strip()
             if response.startswith("```"):
@@ -172,7 +172,7 @@ class WordGenerator:
 直接输出 JSON："""
 
         try:
-            response = self.vision_model.process_page(image_path, prompt)
+            response = self.vision_model.process_page_with_prompt(image_path, prompt)
             # 清理可能的 markdown 代码块标记
             response = response.strip()
             if response.startswith("```"):

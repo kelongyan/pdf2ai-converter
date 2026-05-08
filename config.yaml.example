@@ -11,8 +11,31 @@ model:
 pdf:
   dpi: 150  # 分辨率（150=标准，300=高清）
 
+# 渲染设置
+rendering:
+  image_format: png
+  jpeg_quality: 85
+
 # 分段处理设置
 chunk_size: 10  # 每次处理多少页
+
+# 处理设置
+processing:
+  concurrency: 1
+
+# 缓存设置
+cache:
+  enabled: true
+  prompt_version: v1
+
+# 调试开关
+debug: false
+
+# API 请求策略
+api:
+  timeout: 60
+  max_retries: 2
+  retry_delay: 1
 
 # 质量检查
 quality_check: true
