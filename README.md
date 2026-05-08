@@ -1,12 +1,12 @@
 <div align="center">
 
-# 📄✨ PDF 转换魔法工具
+# 📄✨ PDF2AI Converter
 
-*让 AI 帮你读 PDF，一键转换为 Markdown 或 Word！*
+*使用 AI 视觉大模型智能转换 PDF 为 Markdown 或 Word，自动去除页眉页脚，尽可能保留公式、表格与排版*
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/yourusername/pdf2md/pulls)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/kelongyan/pdf2ai-converter/pulls)
 
 [✨ 特性](#-特性) • [🚀 快速开始](#-快速开始) • [🎮 使用方法](#-使用方法) • [⚙️ 配置](#️-配置)
 
@@ -18,7 +18,7 @@
 
 厌倦了手动复制 PDF 内容？被页眉页脚搞得头大？需要保留原样排版的 Word 文档？
 
-这个工具用 **AI 大模型** 智能识别 PDF，支持两种输出格式：
+这个工具使用 **AI 视觉大模型** 智能识别 PDF，支持输出 Markdown 和 Word，并尽可能保留文档结构与排版信息：
 
 ### 📝 转换为 Markdown
 - 🧹 **去除页眉页脚** - 自动删除页码和水印
@@ -26,13 +26,13 @@
 - 🎨 **格式规范** - 标题层级、列表缩进自动处理
 - ⚡ **批量处理** - 一次转换整个文件夹
 
-### 📄 转换为 Word（新功能！）
+### 📄 转换为 Word
 - 🎨 **保留原样排版** - 尽可能还原字体、颜色、对齐方式
 - 📊 **表格样式** - 保留表格格式和边框
 - 🔤 **字体识别** - 识别并应用原文档字体
 - ⚡ **两种模式** - 快速模式（仅内容）/ 精确模式（保留样式）
 
-> 💡 **支持任何 OpenAI 兼容的视觉模型**：GPT-4V、Claude、通义千问、智谱 GLM...
+> 💡 **支持任何 OpenAI 兼容的视觉模型**：GPT-4V、Claude、通义千问、智谱 GLM 等。
 
 ---
 
@@ -47,7 +47,7 @@
 ### 🎨 交互式界面
 ```
 ╔══════════════════════════════════════════════════════════╗
-║          🚀 PDF 转换工具 v2.1                           ║
+║          🚀 PDF2AI Converter v3.0.0                     ║
 ║          支持 Markdown 和 Word 格式                      ║
 ╚══════════════════════════════════════════════════════════╝
 
@@ -77,8 +77,8 @@
 
 ```powershell
 # 1. 克隆项目
-git clone https://github.com/yourusername/pdf2md.git
-cd pdf2md
+git clone https://github.com/kelongyan/pdf2ai-converter.git
+cd pdf2ai-converter
 
 # 2. 创建虚拟环境
 python -m venv venv
@@ -211,7 +211,7 @@ quality_check: true           # 质量检查开关
 ## 📁 项目结构
 
 ```
-pdf2md/
+pdf2ai-converter/
 ├── 🚀 start.ps1                 # 一键启动脚本
 ├── 🎮 launcher.py               # 交互式启动器
 ├── ⚙️ config_manager.py         # 配置管理
@@ -348,8 +348,8 @@ MIT License - 随便用，记得点个 ⭐
 
 **觉得有用？给个 ⭐ 吧！**
 
-Made with ❤️ by [Your Name]
+Made with ❤️ by [扎西德勒](https://github.com/kelongyan)
 
-[🐛 报告 Bug](https://github.com/yourusername/pdf2md/issues) • [💡 提建议](https://github.com/yourusername/pdf2md/issues) • [📖 文档](https://github.com/yourusername/pdf2md/wiki)
+[🐛 报告 Bug](https://github.com/kelongyan/pdf2ai-converter/issues) • [💡 提建议](https://github.com/kelongyan/pdf2ai-converter/issues) • [📖 文档](https://github.com/kelongyan/pdf2ai-converter/wiki)
 
 </div>

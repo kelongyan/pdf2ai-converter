@@ -1,4 +1,4 @@
-# PDF to Markdown Tool Launcher
+# PDF2AI Converter 启动器
 # PowerShell Script
 
 # Set console encoding to UTF-8
@@ -10,7 +10,7 @@ Set-Location $PSScriptRoot
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "   PDF to Markdown Tool Starting..." -ForegroundColor Cyan
+Write-Host "   PDF2AI Converter 启动中..." -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 

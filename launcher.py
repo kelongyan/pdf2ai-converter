@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""PDF 转 Markdown 交互式启动器"""
+"""PDF2AI Converter 交互式启动器"""
 
 import sys
 import os
@@ -28,7 +28,7 @@ console = Console(force_terminal=True, legacy_windows=False)
 
 
 class PDFConverter:
-    """PDF 转换工具启动器（支持 Markdown 和 Word）"""
+    """PDF2AI Converter 启动器（支持 Markdown 和 Word）"""
 
     def __init__(self):
         self.config_manager = ConfigManager()
@@ -38,7 +38,7 @@ class PDFConverter:
         """显示欢迎横幅"""
         banner = """
 [bold cyan]╔══════════════════════════════════════════════════════════╗
-║          🚀 PDF 转换工具 v3.0.0                         ║
+║          🚀 PDF2AI Converter v3.0.0                     ║
 ║          支持 Markdown 和 Word 格式                      ║
 ╚══════════════════════════════════════════════════════════╝[/bold cyan]
         """

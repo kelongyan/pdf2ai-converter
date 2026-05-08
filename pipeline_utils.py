@@ -27,7 +27,7 @@ def build_cache_manager(config: dict):
 
 
 def create_image_dir() -> str:
-    return tempfile.mkdtemp(prefix="pdf2md_")
+    return tempfile.mkdtemp(prefix="pdf2ai_converter_")
 
 
 def resolve_output_path(pdf_path: str, output_path: str, suffix: str) -> Path:
