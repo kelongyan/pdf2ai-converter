@@ -37,6 +37,10 @@ python -m pytest tests\test_main.py
 # Run a single test case
 python -m pytest tests\test_main_word.py -k cached_pages
 
+# Resume a failed conversion (reprocesses only failed/incomplete pages)
+python main.py paper.pdf --resume
+python main_word.py paper.pdf output.docx precise --resume
+
 # Basic syntax check for first-party Python files
 python -m compileall main.py main_word.py launcher.py config_manager.py config_defaults.py config_validator.py cache_manager.py pipeline_utils.py pdf_processor.py quality_checker.py models tests
 ```
@@ -128,8 +132,9 @@ If you change CLI arguments, config fields, or output defaults in the main entry
 
 The pytest suite is focused on pipeline behavior rather than end-to-end API calls:
 
-- `tests/test_main.py` covers Markdown pipeline ordering, cache hits, and failed-page reporting.
+- `tests/test_main.py` covers Markdown pipeline ordering, cache hits, resume mode, and failed-page reporting.
 - `tests/test_main_word.py` covers the analogous Word pipeline behavior.
+- `tests/test_launcher.py` covers the interactive launcher's file/folder processing, output-path resolution, skip logic, and resume flag propagation.
 - `tests/test_word_generator.py` covers prompt selection, JSON cleanup, and fallback behavior.
 - `tests/test_openai_compatible.py` covers retry behavior and failed-page tracking in the OpenAI-compatible adapter.
 - `tests/test_config_validator.py` and `tests/test_cache_manager.py` cover config normalization and cache-key behavior.
@@ -144,3 +149,4 @@ Most tests monkeypatch the model, cache, and renderer layers, so when adding new
 - Temporary page images are created in a fresh temp directory via `tempfile.mkdtemp()`, then deleted only when `output.cleanup_images` is true.
 - The cached Word output mode is part of the cache key (`word-fast` vs `word-precise`), so mode-specific output changes should preserve that distinction.
 - `quality_checker.py` only applies to Markdown output; Word conversion does not have a parallel quality-pass stage.
+- Both pipelines support `--resume`: cached pages whose content matches the failure sentinel (`[处理失败：...]` for Markdown, single-element paragraph starting with `[第 N 页处理失败` for Word) are re-processed instead of served from cache. The launcher propagates this flag when shelling out to the entrypoints.

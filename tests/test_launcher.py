@@ -45,6 +45,9 @@ class ConverterHarness(PDFConverter):
     def update_config_file(self):
         self.updated += 1
 
+    def get_venv_python(self):
+        return Path("venv/Scripts/python.exe")
+
 
 
 def test_get_output_path_uses_format_suffix(tmp_path):

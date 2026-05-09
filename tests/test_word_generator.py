@@ -15,9 +15,6 @@ class PromptOnlyModel:
         self.prompt_calls.append((image_path, prompt))
         return self.response
 
-    def process_batch(self, images):
-        return ""
-
 
 def test_word_generator_uses_custom_prompt_for_fast_mode():
     model = PromptOnlyModel('{"elements": []}')

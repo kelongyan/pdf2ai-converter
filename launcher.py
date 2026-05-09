@@ -3,7 +3,6 @@
 """PDF2AI Converter 交互式启动器"""
 
 import sys
-import os
 from pathlib import Path
 from tkinter import Tk, filedialog
 from rich.console import Console
@@ -13,16 +12,13 @@ from rich.table import Table
 from rich import box
 from config_manager import ConfigManager
 from config_defaults import build_config_for_profile
+from pipeline_utils import setup_windows_console
 import subprocess
 
 MARKDOWN_SUFFIX = ".md"
 WORD_SUFFIX = ".docx"
 
-# 设置 Windows 控制台 UTF-8 编码
-if sys.platform == "win32":
-    os.system("chcp 65001 > nul")
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
+setup_windows_console()
 
 console = Console(force_terminal=True, legacy_windows=False)
 
@@ -193,6 +189,12 @@ class PDFConverter:
     def should_skip_output(self, pdf_path: str, output_format: str) -> bool:
         return Path(self.get_output_path(pdf_path, output_format)).exists()
 
+    def get_venv_python(self) -> Path:
+        path = Path("venv/Scripts/python.exe")
+        if not path.exists():
+            path = Path("venv/bin/python")
+        return path
+
     def process_file(self, pdf_path: str, output_format: str = "markdown", resume: bool = False):
         """处理单个文件
 
@@ -208,9 +210,7 @@ class PDFConverter:
             console.print("[cyan]本次会重新进入转换流程，但只补处理失败页和未完成页；成功缓存页会自动跳过。[/cyan]\n")
 
         self.update_config_file()
-        venv_python = Path("venv/Scripts/python.exe")
-        if not venv_python.exists():
-            venv_python = Path("venv/bin/python")
+        venv_python = self.get_venv_python()
 
         output_path = self.get_output_path(pdf_path, output_format)
         mode = None
@@ -291,6 +291,17 @@ class PDFConverter:
                 console.print(f"  - {Path(item['pdf_path']).name}: {item['error']}")
             console.print()
 
+    _MENU_ACTIONS = {
+        "1": ("file", "markdown", False),
+        "2": ("file", "word", False),
+        "3": ("folder", "markdown", False),
+        "4": ("folder", "word", False),
+        "5": ("file", "markdown", True),
+        "6": ("file", "word", True),
+        "7": ("folder", "markdown", True),
+        "8": ("folder", "word", True),
+    }
+
     def show_menu(self):
         """显示主菜单"""
         while True:
@@ -322,62 +333,6 @@ class PDFConverter:
             if choice == "0":
                 console.print("\n[cyan]👋 再见！[/cyan]\n")
                 break
-            elif choice == "1":
-                if not self.current_profile:
-                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
-                    continue
-                pdf_path = self.select_pdf_file()
-                if pdf_path:
-                    self.process_file(pdf_path, "markdown")
-            elif choice == "2":
-                if not self.current_profile:
-                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
-                    continue
-                pdf_path = self.select_pdf_file()
-                if pdf_path:
-                    self.process_file(pdf_path, "word")
-            elif choice == "3":
-                if not self.current_profile:
-                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
-                    continue
-                folder_path = self.select_pdf_folder()
-                if folder_path:
-                    self.process_folder(folder_path, "markdown")
-            elif choice == "4":
-                if not self.current_profile:
-                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
-                    continue
-                folder_path = self.select_pdf_folder()
-                if folder_path:
-                    self.process_folder(folder_path, "word")
-            elif choice == "5":
-                if not self.current_profile:
-                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
-                    continue
-                pdf_path = self.select_pdf_file()
-                if pdf_path:
-                    self.process_file(pdf_path, "markdown", resume=True)
-            elif choice == "6":
-                if not self.current_profile:
-                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
-                    continue
-                pdf_path = self.select_pdf_file()
-                if pdf_path:
-                    self.process_file(pdf_path, "word", resume=True)
-            elif choice == "7":
-                if not self.current_profile:
-                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
-                    continue
-                folder_path = self.select_pdf_folder()
-                if folder_path:
-                    self.process_folder(folder_path, "markdown", resume=True)
-            elif choice == "8":
-                if not self.current_profile:
-                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
-                    continue
-                folder_path = self.select_pdf_folder()
-                if folder_path:
-                    self.process_folder(folder_path, "word", resume=True)
             elif choice == "9":
                 self.load_config()
             elif choice == "10":
@@ -385,6 +340,19 @@ class PDFConverter:
                     self.edit_current_config()
                 else:
                     console.print("[yellow]⚠️  请先加载配置[/yellow]\n")
+            elif choice in self._MENU_ACTIONS:
+                if not self.current_profile:
+                    console.print("[yellow]⚠️  请先加载或创建配置[/yellow]\n")
+                    continue
+                scope, fmt, resume = self._MENU_ACTIONS[choice]
+                if scope == "file":
+                    path = self.select_pdf_file()
+                    if path:
+                        self.process_file(path, fmt, resume=resume)
+                else:
+                    path = self.select_pdf_folder()
+                    if path:
+                        self.process_folder(path, fmt, resume=resume)
 
     def edit_current_config(self):
         """编辑当前配置"""

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from main_word import _is_failed_word_page, main
+from main_word import main
 from helpers import RecordingCacheManager, make_valid_config
 
 

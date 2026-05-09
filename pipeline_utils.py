@@ -1,12 +1,28 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+import sys
+import os
 import tempfile
+
+import yaml
 
 from cache_manager import CacheManager
 from models import OpenAICompatibleModel
 
 
 RESUME_MODE_MESSAGE = "🔁 恢复模式：仅补处理失败页和未完成页，成功缓存页将自动跳过。"
+
+
+def setup_windows_console():
+    if sys.platform == "win32":
+        os.system("chcp 65001 > nul")
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+
+
+def load_config(config_path: str = "config.yaml") -> dict:
+    with open(config_path, encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
 
 def build_vision_model(config: dict) -> OpenAICompatibleModel:

@@ -3,14 +3,14 @@
 """PDF 转 Markdown 主程序"""
 
 import sys
-import os
-import yaml
 from pathlib import Path
 from pdf_processor import pdf_to_images, cleanup_images
 from quality_checker import QualityChecker
 from config_validator import validate_config
 from cache_manager import CacheManager
 from pipeline_utils import (
+    setup_windows_console,
+    load_config,
     build_vision_model,
     build_cache_manager,
     create_image_dir,
@@ -24,17 +24,7 @@ from pipeline_utils import (
     print_resume_mode_banner,
 )
 
-# 设置 Windows 控制台 UTF-8 编码
-if sys.platform == "win32":
-    os.system("chcp 65001 > nul")
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
-
-
-def load_config(config_path: str = "config.yaml") -> dict:
-    """加载配置文件"""
-    with open(config_path, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+setup_windows_console()
 
 
 def main(pdf_path: str, output_path: str = None, resume: bool = False):

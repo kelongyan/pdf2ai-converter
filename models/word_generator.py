@@ -30,7 +30,6 @@ class WordGenerator:
         """
         self.vision_model = vision_model
         self.mode = mode
-        self.logger = None  # 可选：添加日志
 
     def process_page_to_word(self, image_path: str, page_num: int) -> Dict[str, Any]:
         """处理单页 PDF，返回结构化数据
@@ -46,6 +45,13 @@ class WordGenerator:
             return self._process_page_fast(image_path, page_num)
         else:
             return self._process_page_precise(image_path, page_num)
+
+    def _strip_code_fence(self, response: str) -> str:
+        response = response.strip()
+        if response.startswith("```"):
+            response = re.sub(r'^```json?\s*\n', '', response)
+            response = re.sub(r'\n```\s*$', '', response)
+        return response
 
     def _process_page_fast(self, image_path: str, page_num: int) -> Dict[str, Any]:
         """快速模式：只提取内容结构"""
@@ -88,11 +94,7 @@ class WordGenerator:
 
         try:
             response = self.vision_model.process_page_with_prompt(image_path, prompt)
-            # 清理可能的 markdown 代码块标记
-            response = response.strip()
-            if response.startswith("```"):
-                response = re.sub(r'^```json?\s*\n', '', response)
-                response = re.sub(r'\n```\s*$', '', response)
+            response = self._strip_code_fence(response)
 
             data = json.loads(response)
             data["page"] = page_num
@@ -173,11 +175,7 @@ class WordGenerator:
 
         try:
             response = self.vision_model.process_page_with_prompt(image_path, prompt)
-            # 清理可能的 markdown 代码块标记
-            response = response.strip()
-            if response.startswith("```"):
-                response = re.sub(r'^```json?\s*\n', '', response)
-                response = re.sub(r'\n```\s*$', '', response)
+            response = self._strip_code_fence(response)
 
             data = json.loads(response)
             data["page"] = page_num

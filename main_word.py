@@ -3,14 +3,14 @@
 """PDF 转 Word 主程序"""
 
 import sys
-import os
-import yaml
 from pathlib import Path
 from pdf_processor import pdf_to_images, cleanup_images
 from models import WordGenerator
 from config_validator import validate_config
 from cache_manager import CacheManager
 from pipeline_utils import (
+    setup_windows_console,
+    load_config,
     build_vision_model,
     build_cache_manager,
     create_image_dir,
@@ -23,17 +23,7 @@ from pipeline_utils import (
     print_resume_mode_banner,
 )
 
-# 设置 Windows 控制台 UTF-8 编码
-if sys.platform == "win32":
-    os.system("chcp 65001 > nul")
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
-
-
-def load_config(config_path: str = "config.yaml") -> dict:
-    """加载配置文件"""
-    with open(config_path, encoding="utf-8") as f:
-        return yaml.safe_load(f)
+setup_windows_console()
 
 
 def main(pdf_path: str, output_path: str = None, mode: str = "precise", resume: bool = False):
@@ -156,10 +146,6 @@ def _process_word_page(word_generator, page: dict) -> dict:
         "cache_key": page["cache_key"],
         "page_data": page_data,
     }
-
-
-def _is_failed_word_page(page_data: dict, page_num: int) -> bool:
-    return is_failed_word_page(page_data, page_num)
 
 
 def print_usage():
