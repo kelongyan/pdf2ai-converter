@@ -16,3 +16,8 @@ config.yaml
 
 # 忽略测试输入和产物
 *.pdf
+
+# Web UI
+web/node_modules/
+web/dist/
+uploads/

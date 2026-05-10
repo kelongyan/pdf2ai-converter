@@ -424,42 +424,45 @@ WebSocket 推送恢复进度 → 完成后合并结果
 
 ## 十一、实现阶段划分
 
-### Phase 1：最小可用版本（MVP）
+### Phase 1：最小可用版本（MVP） ✅ 已完成
 
 **目标**：能上传 PDF、选择格式、看到进度、下载结果。
 
-- FastAPI 骨架 + 文件上传/下载接口
-- 转换任务异步执行 + 状态查询
-- WebSocket 进度推送（阶段级：开始/完成/失败）
-- React 项目初始化 + shadcn/ui + Tailwind + 路由
-- 文件上传组件（拖拽 + 点击）
-- 转换选项组件（格式/模式）
-- 任务列表组件（基础状态显示）
-- 下载功能
-- `server.py` 一键启动 + 自动打开浏览器
+- [x] FastAPI 骨架 + 文件上传/下载接口
+- [x] 转换任务异步执行 + 状态查询
+- [x] WebSocket 进度推送（阶段级：开始/完成/失败）
+- [x] React 项目初始化 + shadcn/ui + Tailwind + 路由
+- [x] 文件上传组件（拖拽 + 点击）
+- [x] 转换选项组件（格式/模式）
+- [x] 任务列表组件（基础状态显示 + Framer Motion 动画）
+- [x] 下载功能
+- [x] `server.py` 一键启动 + 自动打开浏览器
+- [x] 配置管理页面（CRUD profiles）
+- [x] `start_web.ps1` 启动脚本
+- [x] 暗色主题默认启用
 
 ### Phase 2：体验完善
 
-**目标**：逐页进度、预览、暗色模式、配置管理。
+**目标**：逐页进度、预览、暗色模式切换、连接测试。
 
-- 改造 main() 注入 progress_callback，实现逐页进度推送
-- spring 物理进度条 + 预计剩余时间
-- Markdown 预览（react-markdown + KaTeX + Shiki）
-- 暗色/亮色模式切换（默认暗色）
-- 配置管理页面（CRUD profiles + 连接测试）
-- Framer Motion 动画：任务列表增删、面板展开、选项切换
+- [ ] 改造 main() 注入 progress_callback，实现逐页进度推送
+- [ ] spring 物理进度条 + 预计剩余时间
+- [ ] Markdown 预览（react-markdown + KaTeX + Shiki）
+- [ ] 暗色/亮色模式切换
+- [ ] 连接测试（验证 API Key 有效性）
+- [ ] Framer Motion 动画：面板展开、选项切换
 
 ### Phase 3：打磨
 
 **目标**：批量、历史、对照预览、错误恢复 UI 化。
 
-- 批量上传 + 批量转换
-- 历史记录页面（localStorage 持久化）
-- PDF 缩略图 + Markdown 预览左右对照
-- 任务取消功能
-- 错误重试按钮（resume 模式 UI 化）
-- 响应式布局适配
-- 微交互打磨（hover 状态、skeleton loading、toast 通知）
+- [ ] 批量上传 + 批量转换
+- [ ] 历史记录页面（localStorage 持久化）
+- [ ] PDF 缩略图 + Markdown 预览左右对照
+- [ ] 任务取消功能
+- [ ] 错误重试按钮（resume 模式 UI 化）
+- [ ] 响应式布局适配
+- [ ] 微交互打磨（hover 状态、skeleton loading、toast 通知）
 
 ---
 
