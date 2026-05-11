@@ -1,9 +1,19 @@
 import { useState, useCallback } from "react"
+import { motion } from "framer-motion"
 import { FileUpload } from "@/components/file-upload"
 import { ConvertOptions } from "@/components/convert-options"
 import { TaskList } from "@/components/task-list"
 import { useTaskStore } from "@/stores/task-store"
 import { startConvert } from "@/lib/api"
+
+const stagger = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.1, type: "spring" as const, stiffness: 300, damping: 30 },
+  }),
+}
 
 export default function Home() {
   const [fileId, setFileId] = useState<string | null>(null)
@@ -32,12 +42,14 @@ export default function Home() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <div className="space-y-1">
+      <motion.div custom={0} initial="hidden" animate="visible" variants={stagger} className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">PDF2AI Converter</h1>
         <p className="text-sm text-[hsl(var(--muted-foreground))]">上传 PDF 文件，转换为 Markdown 或 Word</p>
-      </div>
+      </motion.div>
 
-      <FileUpload onUploaded={handleUploaded} />
+      <motion.div custom={1} initial="hidden" animate="visible" variants={stagger}>
+        <FileUpload onUploaded={handleUploaded} />
+      </motion.div>
 
       {fileId && (
         <p className="text-sm text-green-600">
@@ -45,18 +57,22 @@ export default function Home() {
         </p>
       )}
 
-      <ConvertOptions
-        outputFormat={outputFormat}
-        setOutputFormat={setOutputFormat}
-        mode={mode}
-        setMode={setMode}
-        resume={resume}
-        setResume={setResume}
-        onConvert={handleConvert}
-        disabled={!fileId}
-      />
+      <motion.div custom={2} initial="hidden" animate="visible" variants={stagger}>
+        <ConvertOptions
+          outputFormat={outputFormat}
+          setOutputFormat={setOutputFormat}
+          mode={mode}
+          setMode={setMode}
+          resume={resume}
+          setResume={setResume}
+          onConvert={handleConvert}
+          disabled={!fileId}
+        />
+      </motion.div>
 
-      <TaskList />
+      <motion.div custom={3} initial="hidden" animate="visible" variants={stagger}>
+        <TaskList />
+      </motion.div>
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 
 interface ConvertOptionsProps {
@@ -31,19 +32,29 @@ export function ConvertOptions({
         </label>
       </div>
 
-      {outputFormat === "word" && (
-        <div className="flex items-center gap-6">
-          <span className="text-sm font-medium">转换模式</span>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="radio" name="mode" checked={mode === "fast"} onChange={() => setMode("fast")} className="accent-blue-500" />
-            快速（仅内容）
-          </label>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
-            <input type="radio" name="mode" checked={mode === "precise"} onChange={() => setMode("precise")} className="accent-blue-500" />
-            精确（保留样式）
-          </label>
-        </div>
-      )}
+      <AnimatePresence>
+        {outputFormat === "word" && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="overflow-hidden"
+          >
+            <div className="flex items-center gap-6">
+              <span className="text-sm font-medium">转换模式</span>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="radio" name="mode" checked={mode === "fast"} onChange={() => setMode("fast")} className="accent-blue-500" />
+                快速（仅内容）
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="radio" name="mode" checked={mode === "precise"} onChange={() => setMode("precise")} className="accent-blue-500" />
+                精确（保留样式）
+              </label>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="flex items-center gap-6">
         <label className="flex items-center gap-2 text-sm cursor-pointer">

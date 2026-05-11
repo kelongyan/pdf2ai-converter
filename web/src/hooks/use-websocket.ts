@@ -19,10 +19,27 @@ export function useProgressWebSocket() {
         if (type === "progress") {
           updateTask(task_id, {
             status: "processing",
-            progress: { ...data, current_page: 0, total_pages: 0, cached_pages: 0, failed_pages: [], ...data },
+            progress: {
+              phase: data.phase || "processing",
+              current_page: data.current_page ?? 0,
+              total_pages: data.total_pages ?? 0,
+              cached_pages: data.cached_pages ?? 0,
+              failed_pages: data.failed_pages ?? [],
+              message: data.message || "",
+            },
           })
         } else if (type === "completed") {
-          updateTask(task_id, { status: "completed", progress: { phase: "done", message: data.message, current_page: 0, total_pages: 0, cached_pages: 0, failed_pages: [] } })
+          updateTask(task_id, {
+            status: "completed",
+            progress: {
+              phase: "done",
+              message: data.message || "转换完成",
+              current_page: 0,
+              total_pages: 0,
+              cached_pages: 0,
+              failed_pages: [],
+            },
+          })
         } else if (type === "error") {
           updateTask(task_id, { status: "failed", error: data.message })
         }

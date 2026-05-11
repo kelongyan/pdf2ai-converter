@@ -26,7 +26,7 @@ from pipeline_utils import (
 setup_windows_console()
 
 
-def main(pdf_path: str, output_path: str = None, mode: str = "precise", resume: bool = False):
+def main(pdf_path: str, output_path: str = None, mode: str = "precise", resume: bool = False, progress_callback=None):
     """主函数
 
     Args:
@@ -34,6 +34,7 @@ def main(pdf_path: str, output_path: str = None, mode: str = "precise", resume: 
         output_path: 输出 Word 文件路径（可选）
         mode: 转换模式 ("fast" 或 "precise")
         resume: 是否仅补处理失败页和未完成页
+        progress_callback: 可选进度回调，接收 dict 事件
     """
     if not Path(pdf_path).exists():
         print(f"❌ 文件不存在：{pdf_path}")
@@ -64,6 +65,9 @@ def main(pdf_path: str, output_path: str = None, mode: str = "precise", resume: 
             jpeg_quality=rendering["jpeg_quality"],
         )
         total_pages = len(images)
+
+        if progress_callback:
+            progress_callback({"type": "rendering_done", "phase": "processing", "total_pages": total_pages, "current_page": 0, "cached_pages": 0, "failed_pages": [], "message": f"渲染完成，共 {total_pages} 页"})
 
         print(f"\n🚀 开始处理（共 {total_pages} 页）...\n")
         pages_data = [None] * total_pages
@@ -107,11 +111,16 @@ def main(pdf_path: str, output_path: str = None, mode: str = "precise", resume: 
         print_processing_summary(total_pages, cached_pages, len(pending_pages))
 
         if pending_pages:
+            def _on_page_done(page_num, total):
+                if progress_callback:
+                    progress_callback({"type": "page_done", "phase": "processing", "current_page": page_num, "total_pages": total, "cached_pages": cached_pages, "failed_pages": [], "message": f"处理第 {page_num}/{total} 页..."})
+
             results = run_pending_pages(
                 pending_pages,
                 concurrency,
                 total_pages,
                 lambda page: _process_word_page(word_generator, page),
+                on_page_done=_on_page_done,
             )
 
             for result in results:
@@ -125,11 +134,17 @@ def main(pdf_path: str, output_path: str = None, mode: str = "precise", resume: 
         else:
             print("✅ 所有页面均已命中缓存，无需重新请求模型。")
 
+        if progress_callback:
+            progress_callback({"type": "writing", "phase": "writing", "total_pages": total_pages, "current_page": total_pages, "cached_pages": cached_pages, "failed_pages": failed_pages, "message": "正在生成 Word 文件..."})
+
         output_path = resolve_output_path(pdf_path, output_path, ".docx")
         word_generator.generate_word(pages_data, str(output_path))
 
         print(f"\n✅ 转换完成！")
         print(f"📝 输出文件：{output_path.absolute()}")
+
+        if progress_callback:
+            progress_callback({"type": "all_done", "phase": "done", "total_pages": total_pages, "current_page": total_pages, "cached_pages": cached_pages, "failed_pages": failed_pages, "message": "转换完成"})
         if failed_pages:
             print_failure_summary(failed_pages)
     finally:

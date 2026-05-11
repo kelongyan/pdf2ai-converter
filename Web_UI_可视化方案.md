@@ -441,16 +441,16 @@ WebSocket 推送恢复进度 → 完成后合并结果
 - [x] `start_web.ps1` 启动脚本
 - [x] 暗色主题默认启用
 
-### Phase 2：体验完善
+### Phase 2：体验完善 ✅ 已完成
 
 **目标**：逐页进度、预览、暗色模式切换、连接测试。
 
-- [ ] 改造 main() 注入 progress_callback，实现逐页进度推送
-- [ ] spring 物理进度条 + 预计剩余时间
-- [ ] Markdown 预览（react-markdown + KaTeX + Shiki）
-- [ ] 暗色/亮色模式切换
-- [ ] 连接测试（验证 API Key 有效性）
-- [ ] Framer Motion 动画：面板展开、选项切换
+- [x] 改造 main() 注入 progress_callback，实现逐页进度推送
+- [x] spring 物理进度条 + 预计剩余时间
+- [x] Markdown 预览（react-markdown + KaTeX + rehype-highlight）
+- [x] 暗色/亮色模式切换
+- [x] 连接测试（验证 API Key 有效性）
+- [x] Framer Motion 动画：面板展开、选项切换、stagger 入场
 
 ### Phase 3：打磨
 

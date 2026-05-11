@@ -79,3 +79,13 @@ export async function deleteProfile(name: string) {
   if (!res.ok) throw new Error(await res.text())
   return res.json()
 }
+
+export async function testConnection(data: { api_url: string; api_key: string; model: string }) {
+  const res = await fetch(`${API_BASE}/config/test-connection`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) throw new Error(await res.text())
+  return res.json() as Promise<{ success: boolean; message: string; latency_ms: number }>
+}

@@ -16,58 +16,42 @@
 
 ## 🎯 这是什么？
 
-厌倦了手动复制 PDF 内容？被页眉页脚搞得头大？需要保留原样排版的 Word 文档？
-
-这个工具使用 **AI 视觉大模型** 智能识别 PDF，支持输出 Markdown 和 Word，并尽可能保留文档结构与排版信息：
+这个工具使用 **AI 视觉大模型** 智能识别 PDF 页面，支持输出 Markdown 和 Word，并尽可能保留文档结构与排版信息。提供三种使用方式：**Web UI**、**交互式 CLI 启动器**、**命令行直接调用**。
 
 ### 📝 转换为 Markdown
-- 🧹 **去除页眉页脚** - 自动删除页码和水印
-- 📐 **保留公式表格** - LaTeX 公式、Markdown 表格完美转换
-- 🎨 **格式规范** - 标题层级、列表缩进自动处理
-- ⚡ **批量处理** - 一次转换整个文件夹
+- 🧹 自动去除页眉页脚、页码、水印
+- 📐 LaTeX 公式、Markdown 表格完美转换
+- 🎨 标题层级、列表缩进自动处理
+- 📊 内置质量评分（0-100）
 
 ### 📄 转换为 Word
-- 🎨 **保留原样排版** - 尽可能还原字体、颜色、对齐方式
-- 📊 **表格样式** - 保留表格格式和边框
-- 🔤 **字体识别** - 识别并应用原文档字体
-- ⚡ **两种模式** - 快速模式（仅内容）/ 精确模式（保留样式）
+- 🎨 精确模式：尽可能还原字体、颜色、对齐方式
+- ⚡ 快速模式：仅提取内容结构，速度快成本低
+- 📊 表格样式保留
 
-> 💡 **支持任何 OpenAI 兼容的视觉模型**：GPT-4V、Claude、通义千问、智谱 GLM 等。
+### 🌐 Web UI
+- 浏览器端可视化操作，拖拽上传
+- 逐页实时进度条 + 预计剩余时间
+- Markdown 在线预览（公式渲染 + 代码高亮）
+- 暗色/亮色主题切换
+- API 连接测试
+
+> 💡 **支持任何 OpenAI 兼容的视觉模型**：GPT-4o、Claude、通义千问、智谱 GLM、DeepSeek 等。
 
 ---
 
 ## ✨ 特性
 
-### 🤖 智能识别
-- 自动识别标题、段落、列表
-- 完美保留 LaTeX 公式（`$...$` 和 `$$...$$`）
-- 表格转 Markdown 语法
-- 代码块自动标记
-
-### 🎨 交互式界面
-```
-╔══════════════════════════════════════════════════════════╗
-║          🚀 PDF2AI Converter v3.0.0                     ║
-║          支持 Markdown 和 Word 格式                      ║
-╚══════════════════════════════════════════════════════════╝
-
-  [1] 📝 转换为 Markdown（单个文件）
-  [2] 📄 转换为 Word（单个文件）
-  [3] 📁 批量转换为 Markdown
-  [4] 📁 批量转换为 Word
-  [5] ⚙️  配置管理
-```
-
-### 📊 质量保证
-- ✅ 实时进度条
-- 📈 质量评分（0-100）
-- 🔍 自动检查公式、表格、编码
-- 📝 详细统计报告
-
-### 🚀 性能优化
-- 📦 **分段处理** - 超长文档自动分段，避免上下文过长
-- ⚡ **进度可视化** - 实时显示处理速度和剩余时间
-- 💾 **配置保存** - 一次配置，永久使用
+| 特性 | 说明 |
+|------|------|
+| 智能识别 | 标题、段落、列表、公式、表格、代码块 |
+| 页级缓存 | 成功页自动缓存，重跑只处理失败页 |
+| 恢复模式 | `--resume` 仅补处理失败/未完成页 |
+| 并发处理 | 多线程并行调用模型，大幅缩短耗时 |
+| 分段处理 | 超长文档自动分段，避免上下文过长 |
+| 批量转换 | 一次处理整个文件夹 |
+| 质量检查 | 公式配对、表格格式、编码检测 |
+| Web UI | 浏览器操作 + WebSocket 实时进度 |
 
 ---
 
@@ -76,28 +60,27 @@
 ### 📦 安装
 
 ```powershell
-# 1. 克隆项目
+# 克隆项目
 git clone https://github.com/kelongyan/pdf2ai-converter.git
 cd pdf2ai-converter
 
-# 2. 创建虚拟环境
+# 创建虚拟环境
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 
-# 3. 安装依赖
+# 安装依赖
 pip install -r requirements.txt
 ```
 
 ### ⚙️ 配置
 
-复制配置模板并填入你的 API 信息：
+复制配置模板并填入 API 信息：
 
 ```powershell
 cp config.yaml.example config.yaml
-# 编辑 config.yaml，填入 API Key
 ```
 
-或者直接运行启动器，交互式配置：
+或直接运行启动器，交互式配置：
 
 ```powershell
 .\start.ps1
@@ -107,40 +90,83 @@ cp config.yaml.example config.yaml
 
 ## 🎮 使用方法
 
-### 方式 1️⃣：交互式启动器（推荐）
+### 方式 1：Web UI（推荐）
+
+```powershell
+.\start_web.ps1
+```
+
+自动打开浏览器访问 `http://localhost:8000`，拖拽 PDF 即可开始转换。
+
+**开发模式**（前后端分离热重载）：
+
+```powershell
+# 终端 1：后端
+python server.py --dev
+
+# 终端 2：前端
+cd web
+npm install
+npm run dev
+```
+
+### 方式 2：交互式启动器
 
 ```powershell
 .\start.ps1
 ```
 
-然后跟着菜单走：
-1. 首次使用会引导你输入 API 信息
-2. 选择 PDF 文件（图形化选择器）
-3. 坐等 AI 处理
-4. 查看质量报告
+跟着菜单走：选择配置 → 选择文件 → 选择格式 → 等待转换 → 查看质量报告。
 
-### 方式 2️⃣：命令行
+### 方式 3：命令行
 
 **转换为 Markdown：**
 ```powershell
-# 单个文件
 python main.py paper.pdf
-
-# 指定输出路径
 python main.py paper.pdf output.md
+python main.py paper.pdf --resume        # 仅补处理失败页
 ```
 
 **转换为 Word：**
 ```powershell
-# 精确模式（保留样式，推荐）
-python main_word.py paper.pdf
-
-# 快速模式（仅内容，速度快）
-python main_word.py paper.pdf output.docx fast
-
-# 指定输出路径
-python main_word.py paper.pdf output.docx precise
+python main_word.py paper.pdf                        # 精确模式（默认）
+python main_word.py paper.pdf output.docx fast       # 快速模式
+python main_word.py paper.pdf output.docx precise --resume  # 恢复模式
 ```
+
+---
+
+## ⚙️ 配置
+
+### 基础配置（config.yaml）
+
+```yaml
+model:
+  type: openai_compatible
+  name: gpt-4o                # 模型名称
+  api_key: your-key-here      # API 密钥
+  base_url: https://api.openai.com/v1
+
+pdf:
+  dpi: 150                    # 分辨率（150=标准，300=高清）
+
+processing:
+  concurrency: 3              # 并发数（多线程处理未缓存页）
+
+cache:
+  enabled: true               # 页级缓存开关
+  prompt_version: "1"         # 修改 prompt 后递增此值以清除缓存
+
+chunk_size: 10                # 分段大小（每次处理页数）
+quality_check: true           # 质量检查开关
+```
+
+### 配置管理
+
+- **CLI 启动器**：交互式创建/切换 API 配置
+- **Web UI 设置页**：可视化管理配置 + 连接测试
+
+配置存储在 `.config.json`（API profiles）和 `config.yaml`（运行时参数）。
 
 ---
 
@@ -148,10 +174,7 @@ python main_word.py paper.pdf output.docx precise
 
 ### 输入：学术论文 PDF
 ```
-📄 6 页学术论文
-- 复杂公式
-- 多个表格
-- 参考文献
+📄 6 页学术论文 - 复杂公式、多个表格、参考文献
 ```
 
 ### 输出：完美 Markdown
@@ -174,36 +197,8 @@ $$
 ```
 📊 质量检查报告
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📈 统计信息：
-  总行数：286
-  标题数：17
-  公式数：113 ✅
-  表格数：40 ✅
-
-🎯 质量得分：100/100
-
-✅ 通过
-```
-
----
-
-## ⚙️ 配置
-
-### 基础配置
-
-```yaml
-model:
-  type: openai_compatible
-  name: qwen3.6-plus          # 模型名称
-  api_key: your-key-here      # API 密钥
-  base_url: https://api.xxx   # API 地址
-
-pdf:
-  dpi: 150                    # 分辨率（150=标准，300=高清）
-
-chunk_size: 10                # 分段大小（每次处理页数）
-quality_check: true           # 质量检查开关
+📈 统计信息：总行数 286 · 标题 17 · 公式 113 ✅ · 表格 40 ✅
+🎯 质量得分：100/100 ✅ 通过
 ```
 
 ---
@@ -212,63 +207,78 @@ quality_check: true           # 质量检查开关
 
 ```
 pdf2ai-converter/
-├── 🚀 start.ps1                 # 一键启动脚本
-├── 🎮 launcher.py               # 交互式启动器
-├── ⚙️ config_manager.py         # 配置管理
-├── 🔧 main.py                   # Markdown 转换程序
-├── 📄 main_word.py              # Word 转换程序（新增）
-├── 📄 pdf_processor.py          # PDF 转图片
-├── 🔍 quality_checker.py        # 质量检查
-├── 📦 models/                   # 模型适配器
-│   ├── base.py                 # 抽象基类
-│   ├── openai_compatible.py    # OpenAI 兼容接口
-│   └── word_generator.py       # Word 生成器（新增）
-├── 📋 config.yaml.example       # 配置模板
-├── 📝 requirements.txt          # 依赖列表
-└── 📖 README.md                 # 你正在看的文档
+├── start.ps1                    # CLI 启动脚本
+├── start_web.ps1                # Web UI 启动脚本
+├── server.py                    # FastAPI 入口
+├── launcher.py                  # 交互式 CLI 启动器
+├── main.py                      # Markdown 转换管道
+├── main_word.py                 # Word 转换管道
+├── pipeline_utils.py            # 共享管道逻辑（缓存、并发、进度）
+├── pdf_processor.py             # PDF → 图片
+├── cache_manager.py             # 页级缓存
+├── quality_checker.py           # Markdown 质量检查
+├── config_manager.py            # 配置 profile 管理
+├── config_validator.py          # 配置校验
+├── config_defaults.py           # 默认配置值
+├── models/                      # 模型适配器
+│   ├── base.py                 # VisionModel 抽象基类
+│   ├── openai_compatible.py    # OpenAI 兼容接口（含重试）
+│   └── word_generator.py       # Word 两阶段生成器
+├── api/                         # Web 后端（FastAPI）
+│   ├── app.py                  # App 工厂 + 路由挂载
+│   ├── routes/                 # REST + WebSocket 端点
+│   ├── schemas/                # Pydantic 数据模型
+│   └── services/               # 任务管理 + 进度广播
+├── web/                         # React 前端
+│   ├── src/                    # TypeScript 源码
+│   └── dist/                   # 生产构建产物（gitignore）
+├── tests/                       # pytest 测试套件
+├── config.yaml.example          # 配置模板
+└── requirements.txt             # Python 依赖
 ```
 
 ---
 
 ## 🎨 高级功能
 
+### 🔁 恢复模式
+
+转换中断或部分页面失败时，使用 `--resume` 仅重试失败页，已成功的页面自动跳过：
+
+```powershell
+python main.py paper.pdf --resume
+python main_word.py paper.pdf output.docx precise --resume
+```
+
+Web UI 中勾选"恢复模式"复选框即可。
+
+### ⚡ 并发处理
+
+配置 `processing.concurrency` 开启多线程并行处理未缓存页面：
+
+```yaml
+processing:
+  concurrency: 5  # 5 个线程并行
+```
+
 ### 📦 分段处理
 
-超长文档（50+ 页）自动分段，避免上下文过长：
+超长文档自动分段，避免上下文过长：
 
 ```yaml
 chunk_size: 5  # 每 5 页一段
 ```
 
-### 🔍 质量检查（Markdown 模式）
-
-自动检查：
-- ✅ 内容长度是否合理
-- ✅ 公式符号是否配对
-- ✅ 表格格式是否正确
-- ✅ 是否有乱码或模型错误
-
 ### 📄 Word 转换模式
 
-**快速模式（fast）**：
-- 只保留内容结构（标题、段落、表格、列表）
-- 处理速度快，API 成本低
-- 适合：需要快速提取内容，不在意样式
+| 模式 | 说明 | 适用场景 |
+|------|------|----------|
+| `fast` | 仅提取内容结构 | 快速提取，不在意样式 |
+| `precise` | 保留字体、颜色、对齐 | 正式文档，需要原样排版 |
 
-**精确模式（precise）**：
-- 尽可能保留原文档样式（字体、颜色、对齐）
-- 处理时间较长，API 成本较高
-- 适合：需要保持原样排版的正式文档
+### 🔍 质量检查（Markdown）
 
-```yaml
-# 在 config.yaml 中配置默认模式
-word:
-  mode: precise  # 或 fast
-```
-
-### 📁 批量处理
-
-在启动器中选择"批量处理"，一次转换整个文件夹的 PDF。
+自动检查内容长度、公式配对、表格格式、编码问题，输出 0-100 质量评分。
 
 ---
 
@@ -277,61 +287,49 @@ word:
 <details>
 <summary><b>Q: 支持哪些语言的 PDF？</b></summary>
 
-A: 支持所有语言！取决于你选择的视觉大模型能力。
+A: 支持所有语言，取决于你选择的视觉大模型能力。
 </details>
 
 <details>
 <summary><b>Q: Word 转换能完美还原样式吗？</b></summary>
 
-A: 精确模式会尽力还原，但受限于：
-- AI 模型的识别能力
-- 特殊字体可能无法完全匹配
-- 复杂布局（如文本环绕图片）可能有偏差
-- 建议：转换后人工微调
-</details>
-
-<details>
-<summary><b>Q: 快速模式和精确模式有什么区别？</b></summary>
-
-A: 
-- **快速模式**：只提取内容结构，不保留样式，速度快（约 $0.01-0.05/页）
-- **精确模式**：分析并保留字体、颜色、对齐等样式，速度慢（约 $0.05-0.15/页）
-</details>
-
-<details>
-<summary><b>Q: 质量检查不通过怎么办？</b></summary>
-
-A: 查看报告中的具体问题：
-- 公式未配对 → 检查原 PDF 是否有特殊符号
-- 内容过短 → 可能模型不支持视觉，换个模型
-- 表格格式错误 → 手动补充分隔符
+A: 精确模式会尽力还原，但特殊字体、复杂布局可能有偏差，建议转换后人工微调。
 </details>
 
 <details>
 <summary><b>Q: 可以离线使用吗？</b></summary>
 
-A: 需要调用在线 API。如果要离线，可以：
-1. 部署本地大模型（如 Ollama + LLaVA）
-2. 修改 `models/` 适配器支持本地模型
+A: 需要调用在线 API。如果要离线，可以部署本地大模型（如 Ollama + LLaVA）并修改 `base_url` 指向本地。
+</details>
+
+<details>
+<summary><b>Q: Web UI 需要安装 Node.js 吗？</b></summary>
+
+A: 生产模式不需要——前端已预构建到 `web/dist/`，FastAPI 直接 serve 静态文件。只有开发模式（热重载）才需要 Node.js。
 </details>
 
 ---
 
 ## 🛠️ 开发
 
-### 贡献代码
+```powershell
+# 运行测试
+python -m pytest tests -v
 
-欢迎 PR！请确保：
-- ✅ 代码风格一致
-- ✅ 添加必要的注释
-- ✅ 测试通过
-- ✅ 更新文档
+# 语法检查
+python -m compileall main.py main_word.py pipeline_utils.py api server.py models tests
+
+# 前端构建
+cd web && npm run build
+```
+
+欢迎 PR！请确保测试通过、代码风格一致。
 
 ---
 
 ## 📜 开源协议
 
-MIT License - 随便用，记得点个 ⭐
+MIT License
 
 ---
 
@@ -339,8 +337,10 @@ MIT License - 随便用，记得点个 ⭐
 
 - [PyMuPDF](https://github.com/pymupdf/PyMuPDF) - PDF 处理
 - [python-docx](https://github.com/python-openxml/python-docx) - Word 文档生成
+- [FastAPI](https://fastapi.tiangolo.com/) - Web 框架
+- [React](https://react.dev/) + [Tailwind CSS](https://tailwindcss.com/) - 前端
+- [Framer Motion](https://www.framer.com/motion/) - 动画
 - [Rich](https://github.com/Textualize/rich) - 终端美化
-- [OpenAI](https://openai.com/) - API 标准
 
 ---
 
@@ -350,6 +350,6 @@ MIT License - 随便用，记得点个 ⭐
 
 Made with ❤️ by [扎西德勒](https://github.com/kelongyan)
 
-[🐛 报告 Bug](https://github.com/kelongyan/pdf2ai-converter/issues) • [💡 提建议](https://github.com/kelongyan/pdf2ai-converter/issues) • [📖 文档](https://github.com/kelongyan/pdf2ai-converter/wiki)
+[🐛 报告 Bug](https://github.com/kelongyan/pdf2ai-converter/issues) • [💡 提建议](https://github.com/kelongyan/pdf2ai-converter/issues)
 
 </div>

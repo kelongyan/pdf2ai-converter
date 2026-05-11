@@ -1,6 +1,8 @@
 import sys
+import time
 from pathlib import Path
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
@@ -12,6 +14,34 @@ router = APIRouter()
 
 def _get_cm():
     return ConfigManager()
+
+
+class TestConnectionRequest(BaseModel):
+    api_url: str
+    api_key: str
+    model: str
+
+
+@router.post("/config/test-connection")
+async def test_connection(req: TestConnectionRequest):
+    import asyncio
+    from openai import OpenAI
+
+    def _test():
+        client = OpenAI(api_key=req.api_key, base_url=req.api_url, timeout=15)
+        start = time.time()
+        client.chat.completions.create(
+            model=req.model,
+            messages=[{"role": "user", "content": "Hi"}],
+            max_tokens=1,
+        )
+        return int((time.time() - start) * 1000)
+
+    try:
+        latency_ms = await asyncio.to_thread(_test)
+        return {"success": True, "message": "连接成功", "latency_ms": latency_ms}
+    except Exception as e:
+        return {"success": False, "message": str(e), "latency_ms": 0}
 
 
 @router.get("/config/profiles", response_model=list[ProfileResponse])

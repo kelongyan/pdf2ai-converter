@@ -27,13 +27,14 @@ from pipeline_utils import (
 setup_windows_console()
 
 
-def main(pdf_path: str, output_path: str = None, resume: bool = False):
+def main(pdf_path: str, output_path: str = None, resume: bool = False, progress_callback=None):
     """主函数
 
     Args:
         pdf_path: PDF 文件路径
         output_path: 输出 Markdown 文件路径（可选）
         resume: 是否仅补处理失败页和未完成页
+        progress_callback: 可选进度回调，接收 dict 事件
     """
     # 检查文件是否存在
     if not Path(pdf_path).exists():
@@ -66,6 +67,9 @@ def main(pdf_path: str, output_path: str = None, resume: bool = False):
             jpeg_quality=rendering["jpeg_quality"],
         )
         total_pages = len(images)
+
+        if progress_callback:
+            progress_callback({"type": "rendering_done", "phase": "processing", "total_pages": total_pages, "current_page": 0, "cached_pages": 0, "failed_pages": [], "message": f"渲染完成，共 {total_pages} 页"})
 
         # 调用模型处理
         print(f"🚀 开始调用大模型处理（共 {total_pages} 页）...\n")
@@ -117,11 +121,16 @@ def main(pdf_path: str, output_path: str = None, resume: bool = False):
         print_processing_summary(total_pages, cached_pages, len(pending_pages))
 
         if pending_pages:
+            def _on_page_done(page_num, total):
+                if progress_callback:
+                    progress_callback({"type": "page_done", "phase": "processing", "current_page": page_num, "total_pages": total, "cached_pages": cached_pages, "failed_pages": [], "message": f"处理第 {page_num}/{total} 页..."})
+
             results = run_pending_pages(
                 pending_pages,
                 concurrency,
                 total_pages,
                 lambda page: _process_markdown_page(model, page),
+                on_page_done=_on_page_done,
             )
 
             for result in results:
@@ -140,11 +149,17 @@ def main(pdf_path: str, output_path: str = None, resume: bool = False):
             config["output"]["add_page_separator"],
         )
 
+        if progress_callback:
+            progress_callback({"type": "writing", "phase": "writing", "total_pages": total_pages, "current_page": total_pages, "cached_pages": cached_pages, "failed_pages": [item["page"] for item in failed_pages], "message": "正在写入文件..."})
+
         # 保存结果
         output_path = resolve_output_path(pdf_path, output_path, ".md")
         output_path.write_text(markdown, encoding="utf-8")
         print(f"\n✅ 转换完成！")
         print(f"📝 输出文件：{output_path.absolute()}")
+
+        if progress_callback:
+            progress_callback({"type": "all_done", "phase": "done", "total_pages": total_pages, "current_page": total_pages, "cached_pages": cached_pages, "failed_pages": [item["page"] for item in failed_pages], "message": "转换完成"})
 
         # 质量检查
         if config.get("quality_check", True):

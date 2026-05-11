@@ -48,6 +48,35 @@ def delete_task(task_id: str):
     return tasks.pop(task_id, None)
 
 
+def _make_progress_callback(task_id: str, task: TaskResponse, loop: asyncio.AbstractEventLoop):
+    def callback(event: dict):
+        task.progress.current_page = event.get("current_page", task.progress.current_page)
+        task.progress.total_pages = event.get("total_pages", task.progress.total_pages)
+        task.progress.cached_pages = event.get("cached_pages", task.progress.cached_pages)
+        task.progress.failed_pages = event.get("failed_pages", task.progress.failed_pages)
+        task.progress.message = event.get("message", "")
+
+        phase_str = event.get("phase", "processing")
+        try:
+            task.progress.phase = TaskPhase(phase_str)
+        except ValueError:
+            task.progress.phase = TaskPhase.processing
+
+        broadcast_data = {
+            "phase": phase_str,
+            "current_page": task.progress.current_page,
+            "total_pages": task.progress.total_pages,
+            "cached_pages": task.progress.cached_pages,
+            "failed_pages": task.progress.failed_pages,
+            "message": task.progress.message,
+        }
+        asyncio.run_coroutine_threadsafe(
+            broadcaster.broadcast(task_id, "progress", broadcast_data),
+            loop,
+        )
+    return callback
+
+
 async def run_convert_task(task_id: str, req: ConvertRequest):
     task = tasks.get(task_id)
     if not task:
@@ -56,7 +85,7 @@ async def run_convert_task(task_id: str, req: ConvertRequest):
     task.status = TaskStatusEnum.processing
     task.progress.phase = TaskPhase.processing
     task.progress.message = "转换中..."
-    await broadcaster.broadcast(task_id, "progress", {"phase": "processing", "message": "转换中..."})
+    await broadcaster.broadcast(task_id, "progress", {"phase": "processing", "message": "转换中...", "current_page": 0, "total_pages": 0, "cached_pages": 0, "failed_pages": []})
 
     uploads_dir = Path("uploads") / task_id
     pdf_path = str(uploads_dir / "input.pdf")
@@ -82,13 +111,16 @@ async def run_convert_task(task_id: str, req: ConvertRequest):
     with open("config.yaml", "w", encoding="utf-8") as f:
         yaml.dump(config, f, allow_unicode=True)
 
+    loop = asyncio.get_event_loop()
+    progress_callback = _make_progress_callback(task_id, task, loop)
+
     try:
         if req.output_format == "word":
             from main_word import main as word_main
-            await asyncio.to_thread(word_main, pdf_path, output_path, req.mode, req.resume)
+            await asyncio.to_thread(word_main, pdf_path, output_path, req.mode, req.resume, progress_callback)
         else:
             from main import main as md_main
-            await asyncio.to_thread(md_main, pdf_path, output_path, req.resume)
+            await asyncio.to_thread(md_main, pdf_path, output_path, req.resume, progress_callback)
 
         task.status = TaskStatusEnum.completed
         task.progress.phase = TaskPhase.done

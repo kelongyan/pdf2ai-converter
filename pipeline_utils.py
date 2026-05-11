@@ -106,18 +106,29 @@ def run_pending_pages(
     concurrency: int,
     total_pages: int,
     process_page,
+    on_page_done=None,
 ):
     if not pending_pages:
         return []
 
     if concurrency > 1 and len(pending_pages) > 1:
         print(f"⚡ 并发处理未命中缓存页面：{len(pending_pages)} 页，并发数={concurrency}")
+
+        def _wrapped(page):
+            result = process_page(page)
+            if on_page_done:
+                on_page_done(result["page_num"], total_pages)
+            return result
+
         with ThreadPoolExecutor(max_workers=concurrency) as executor:
-            results = list(executor.map(process_page, pending_pages))
+            results = list(executor.map(_wrapped, pending_pages))
     else:
         results = []
         for page in pending_pages:
             print(f"📄 处理第 {page['page_num']}/{total_pages} 页...")
-            results.append(process_page(page))
+            result = process_page(page)
+            results.append(result)
+            if on_page_done:
+                on_page_done(result["page_num"], total_pages)
 
     return sorted(results, key=lambda item: item["page_num"])
